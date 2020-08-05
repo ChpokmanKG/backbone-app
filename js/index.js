@@ -15,7 +15,7 @@ app.User = Backbone.Model.extend({
 
 app.UserList = Backbone.Collection.extend({
   model: app.User,
-  localStorage: new Store("users-list")
+  localStorage: new Backbone.LocalStorage("user-list"),
 })
 
 app.userList = new app.UserList();
@@ -72,10 +72,27 @@ app.UserView = Backbone.View.extend({
 app.AppView = Backbone.View.extend({
   el: "#user-app",
   initialize() {
+    var that = this;
     this.nameInput = this.$('#nameInput');
     this.phoneInput = this.$('#phoneNumberNumber');
     app.userList.on('add',this.addOne,this);
-    app.userList.fetch()
+    app.userList.fetch({
+      success: function(coll) {
+        _.each(coll.models, item => that.addOne(item))
+      }
+    })
+    this.initialData(true); // true(покажет начальные данные) || false(не покажет)
+  },
+  initialData(bool) {
+    if(!localStorage.getItem('user-list') && bool) {
+      for(let i = 0; i < 5; i++) {
+        app.userList.create({
+          name: "Chyngyz",
+          phoneNumber: "0708983478",
+          isChanging: false
+        })
+      }
+    }
   },
   events: {
     'submit #main-form': 'formEvent'
